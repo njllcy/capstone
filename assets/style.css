@@ -1,0 +1,441 @@
+/* ============================================================
+   HealthKiosk — Shared Stylesheet
+   Extracted from all pages. Page-specific styles remain inline.
+   ============================================================ */
+
+/* ── CSS VARIABLES ── */
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --border: #dde3ec;
+  --accent: #2563eb;
+  --accent-light: #eff4ff;
+  --text: #1e2d3d;
+  --text2: #4a5f75;
+  --text3: #8fa4b8;
+  --mono: 'Space Mono', monospace;
+  --font: 'DM Sans', sans-serif;
+  --green: #16a34a;
+  --red: #dc2626;
+}
+
+/* ── RESET ── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font);
+}
+
+/* ── BODY ── */
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+.header {
+  height: 48px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  width: 30px;
+  height: 30px;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.logo-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* ── CLOCK ── */
+.clock-block {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+}
+
+.clock {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.clock-date {
+  font-size: 9px;
+  color: var(--text3);
+}
+
+.header-step {
+  font-size: 10px;
+  color: var(--text3);
+}
+
+/* ── MAIN LAYOUT ── */
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+}
+
+/* ── CARD ── */
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* ── DOT (WebSocket status indicator) ── */
+.dot {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+  display: none;
+  transition: background 0.3s;
+}
+
+/* ── STEP PROGRESS BAR ── */
+.step-progress-top {
+  width: 100%;
+  height: 6px;
+  background: #e0e7ef;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.step-bar-top {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+/* ── STEPS ── */
+.step {
+  display: none;
+  text-align: center;
+}
+
+.step.active {
+  display: block;
+}
+
+.step-icon {
+  font-size: 42px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.step h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.step p {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+/* ── INSTRUCTION BOX ── */
+.instruction-box {
+  background: #f0f4f8;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.instruction-box li {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.8;
+  margin-left: 16px;
+}
+
+/* ── BUTTONS ── */
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+button:active {
+  opacity: 0.85;
+}
+
+button:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-next {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-start {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-done {
+  background: var(--green);
+  color: #fff;
+}
+
+.btn-manual {
+  background: #e0e7ef;
+  color: var(--text);
+  margin-top: 8px;
+}
+
+.btn-back {
+  background: #e0e7ef;
+  color: var(--text);
+  border: none;
+  border-radius: 8px;
+  padding: 11px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  width: auto;
+}
+
+.btn-back:hover {
+  opacity: 0.8;
+}
+
+/* ── FADE SECTION ── */
+.fade-section {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-section.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+}
+
+.fade-section.visible {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+/* ── SAVING OVERLAY ── */
+.saving-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.saving-box {
+  background: #fff;
+  padding: 30px 28px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e0e7ef;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 14px;
+}
+
+.saving-box p {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.saving-box small {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+/* ── SUCCESS OVERLAY ── */
+.success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.success-box {
+  background: #fff;
+  padding: 30px 28px;
+  border-radius: 14px;
+  text-align: center;
+  animation: pop 0.3s ease;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.check {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 4px solid var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  animation: scaleIn 0.4s ease;
+}
+
+.check::after {
+  content: "✔";
+  color: var(--green);
+  font-size: 30px;
+}
+
+.success-box p {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.success-box small {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+/* ── KEYFRAMES ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pop {
+  0%   { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes scaleIn {
+  0%   { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.1); }
+}
+
+@keyframes wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25%       { transform: rotate(-3deg); }
+  75%       { transform: rotate(3deg); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+  .card {
+    padding: 12px;
+  }
+
+  .step-icon {
+    font-size: 36px;
+  }
+
+  .step h3 {
+    font-size: 15px;
+  }
+
+  .step p {
+    font-size: 12px;
+  }
+
+  .logo-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+  }
+
+  .logo-name {
+    font-size: 13px;
+  }
+
+  .clock {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .main {
+    padding: 10px;
+  }
+
+  .card {
+    padding: 10px;
+  }
+
+  button {
+    font-size: 13px;
+    padding: 9px;
+  }
+}

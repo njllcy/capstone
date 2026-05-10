@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="kiosk-token" content="<?= htmlspecialchars(getenv('KIOSK_API_TOKEN') ?: '') ?>">
+<title>Body Temperature</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/app.js"></script>
+<style>
+/* Page-specific styles */
+.display{text-align:center;padding:20px 10px;}
+
+.thermo{font-size:56px;display:inline-block;animation:pulse 2s infinite;}
+.thermo.paused{animation:none;}
+
+.temp{font-size:52px;font-weight:700;color:var(--accent);font-family:var(--mono);margin-top:6px;}
+.unit{font-size:13px;color:var(--text3);margin-bottom:8px;}
+.status{margin-top:8px;font-size:13px;color:#555;min-height:20px;}
+
+.progress{width:100%;height:8px;background:#e0e7ef;border-radius:10px;overflow:hidden;margin-top:14px;margin-bottom:14px;}
+.bar{width:0%;height:100%;background:var(--accent);transition:width 0.6s ease;}
+</style>
+</head>
+<body>
+
+<?php include '../includes/header.php'; ?>
+
+<div class="main">
+<div class="card">
+  <div class="dot" id="dot"></div>
+
+  <div class="step-progress-top" id="stepProgressTop">
+    <div class="step-bar-top" id="stepBar"></div>
+  </div>
+
+  <!-- STEPS -->
+  <div id="stepsWrapper" class="fade-section visible">
+
+    <div class="step active">
+      <span class="step-icon">🌡️</span>
+      <h3>Body Temperature Measurement</h3>
+      <p>This test measures your body temperature using a contactless infrared sensor. Please read the instructions before starting.</p>
+      <button class="btn-next" onclick="nextStep(25)">Next →</button>
+    </div>
+
+    <div class="step">
+      <span class="step-icon">🧖</span>
+      <h3>Step 1 — Prepare</h3>
+      <p>Before measuring, make sure you are:</p>
+      <div class="instruction-box">
+        <ul>
+          <li>Stand calmly for at least 1 minute</li>
+          <li>Not sweating or overheated</li>
+          <li>Away from direct sunlight or airflow</li>
+          <li>Have not exercised recently</li>
+        </ul>
+      </div>
+      <button class="btn-next" onclick="nextStep(50)">Next →</button>
+    </div>
+
+    <div class="step">
+      <span class="step-icon">👆</span>
+      <h3>Step 2 — Position</h3>
+      <p>Point the sensor at your <strong>forehead</strong> — about 3–5 cm away from the center of your hand.</p>
+      <div class="instruction-box">
+        <ul>
+          <li>Keep the sensor aimed steadily</li>
+          <li>Do not touch the sensor tip</li>
+        </ul>
+      </div>
+      <button class="btn-next" onclick="nextStep(75)">Next →</button>
+    </div>
+
+    <div class="step">
+      <span class="step-icon">✅</span>
+      <h3>Step 3 — Ready</h3>
+      <p>Stay still and breathe normally. The sensor will take a quick reading and display your body temperature in °C.</p>
+      <button class="btn-start" onclick="startApp()">Start Measurement</button>
+    </div>
+
+  </div>
+
+  <!-- MAIN UI -->
+  <div id="mainUI" style="display:none;" class="fade-section hidden">
+    <div class="display">
+      <div class="thermo" id="thermoIcon">🌡️</div>
+      <div class="temp" id="temp">--.-</div>
+      <div class="unit">°C Body Temperature</div>
+      <div class="status" id="statusText">Ready</div>
+      <div class="progress">
+        <div class="bar" id="bar"></div>
+      </div>
+      <button class="btn-start" id="btn" onclick="startMeasure()" style="margin-top:10px;">Start Reading</button>
+      <button class="btn-done" id="doneBtn" style="display:none;margin-top:8px;" onclick="saveDone()">Done ✓</button>
+      <button class="btn-back" id="skipBtn" onclick="skipStep()" style="margin-top:8px;">Skip for Testing</button>
+      <div id="errorBanner" style="display:none; background:#fee2e2; border:1px solid #fca5a5;
+           border-radius:8px; padding:10px 14px; font-size:13px; color:#dc2626; margin-top:10px;">
+      </div>
+      <button id="retryBtn" style="display:none;" class="btn-start" onclick="saveDone()">
+        ↺ Retry Save
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Screen -->
+  <div id="errorScreen" style="display:none;" class="fade-section hidden">
+    <div class="display">
+      <div style="font-size:52px;margin-bottom:12px;">⚠️</div>
+      <h3 style="color:#dc2626;margin-bottom:8px;">Sensor Error</h3>
+      <p id="errorMessage" style="color:#555;font-size:13px;margin-bottom:16px;">Unable to connect to sensor.</p>
+      <button class="btn-start" onclick="retryConnection()">🔄 Retry Connection</button>
+      <button class="btn-back" onclick="skipStep()" style="margin-top:8px;">Skip for Testing</button>
+      <button class="btn-back" onclick="goBack()" style="margin-top:8px;">← Go Back</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="success-overlay" id="success">
+  <div class="success-box">
+    <div class="check"></div>
+    <p>Saved Successfully!</p>
+    <small>Redirecting to home...</small>
+  </div>
+</div>
+
+<script>
+/* SKIP STEP (for testing) */
+function skipStep(){ window.location.href = "../home.php"; }
+
+/* GO BACK */
+function goBack(){ window.location.href = "../home.php"; }
+
+/* RETRY CONNECTION */
+function retryConnection(){
+  document.getElementById("errorScreen").style.display = "none";
+  document.getElementById("mainUI").style.display = "block";
+  connect();
+}
+
+/* SHOW ERROR SCREEN */
+function showErrorScreen(message){
+  document.getElementById("mainUI").style.display = "none";
+  document.getElementById("errorScreen").style.display = "block";
+  document.getElementById("errorMessage").textContent = message;
+}
+
+/* STEPS */
+let stepIndex=0;
+const steps=document.querySelectorAll(".step");
+function nextStep(percent){
+  steps[stepIndex].classList.remove("active");
+  stepIndex++;
+  if(stepIndex<steps.length) steps[stepIndex].classList.add("active");
+  document.getElementById("stepBar").style.width=percent+"%";
+  document.getElementById("headerStep").textContent="Step "+(stepIndex+1)+" of 4";
+}
+
+/* START APP */
+function startApp(){
+  const wrapper=document.getElementById("stepsWrapper");
+  const mainUI=document.getElementById("mainUI");
+  wrapper.classList.remove("visible");wrapper.classList.add("hidden");
+  setTimeout(()=>{
+    wrapper.style.display="none";
+    document.getElementById("stepProgressTop").style.display="none";
+    document.getElementById("headerStep").textContent="Measuring Mode";
+    document.getElementById("dot").style.display="block";
+    mainUI.style.display="block";
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      mainUI.classList.remove("hidden");mainUI.classList.add("visible");
+    }));
+    connect();
+  },500);
+}
+
+/* WEBSOCKET */
+let ws;
+let connectionAttempts = 0;
+const MAX_CONNECTION_ATTEMPTS = 3;
+
+function connect(){
+  connectionAttempts++;
+  ws=new WebSocket(`ws://${location.hostname}:8765`);
+  ws.onopen=()=>{
+    connectionAttempts = 0;
+    document.getElementById("dot").style.background="#16a34a";
+    document.getElementById("statusText").textContent="Sensor Connected ✓";
+  };
+  ws.onerror=()=>{
+    if(connectionAttempts >= MAX_CONNECTION_ATTEMPTS){
+      showErrorScreen("Failed to connect to sensor after " + MAX_CONNECTION_ATTEMPTS + " attempts.");
+    }
+  };
+  ws.onclose=()=>{
+    document.getElementById("dot").style.background="#dc2626";
+    if(connectionAttempts >= MAX_CONNECTION_ATTEMPTS){
+      showErrorScreen("Connection to sensor lost. Please check hardware.");
+    } else {
+      document.getElementById("statusText").textContent="Reconnecting...";
+      setTimeout(connect,2000);
+    }
+  };
+  ws.onmessage=(e)=>{
+    const data=JSON.parse(e.data);
+    if(data.error) { 
+      showErrorScreen(data.status || "Hardware sensor error occurred."); 
+      return; 
+    }
+    if(data.temp!==undefined) document.getElementById("temp").textContent=data.temp;
+    if(data.status==="done") onDone();
+  };
+}
+
+/* START MEASURE */
+function startMeasure(){
+  document.getElementById("btn").disabled=true;
+  document.getElementById("statusText").textContent="Reading temperature...";
+  document.getElementById("bar").style.width="40%";
+  document.getElementById("thermoIcon").classList.remove("paused");
+  ws.send(JSON.stringify({action:"start_temp"}));
+}
+
+/* ON DONE */
+function onDone(){
+  document.getElementById("statusText").textContent="Reading Complete ✓";
+  document.getElementById("thermoIcon").classList.add("paused");
+  document.getElementById("bar").style.width="100%";
+  document.getElementById("doneBtn").style.display="block";
+  document.getElementById("skipBtn").style.display="none";
+}
+
+/* SAVE */
+async function saveDone(){
+  const temp = document.getElementById("temp").textContent;
+  const pid = getSession("patient_id");
+  const rid = getSession("record_id");
+
+  // 1. Save to sessionStorage immediately
+  setSession("temp", temp);
+
+  // 2. Try to save to DB
+  const errorBanner = document.getElementById("errorBanner");
+  try {
+    const json = await apiFetch("../api/save_vitals.php", {
+      patient_id: parseInt(pid),
+      record_id: parseInt(rid),
+      temperature_c: parseFloat(temp)
+    });
+
+    if (!json.success) throw new Error(json.error || "Unknown error");
+
+    // 3. Success — show overlay and redirect
+    document.getElementById("success").style.display = "flex";
+    setTimeout(() => { window.location.href = "../home.php"; }, 1800);
+
+  } catch (e) {
+    // 4. Failure — show error banner, do NOT redirect
+    errorBanner.textContent = "⚠️ Could not save to database. " + e.message;
+    errorBanner.style.display = "block";
+    document.getElementById("retryBtn").style.display = "block";
+  }
+}
+
+startIdleTimer();
+</script>
+
+<!-- Idle timeout overlay — controlled by app.js -->
+<div id="idleOverlay" style="display:none; position:fixed; inset:0;
+     background:rgba(0,0,0,0.75); z-index:9999;
+     align-items:center; justify-content:center; flex-direction:column; gap:12px;">
+  <div style="background:#fff; border-radius:14px; padding:32px 28px; text-align:center;">
+    <div style="font-size:40px; margin-bottom:8px;">⏱️</div>
+    <div style="font-size:18px; font-weight:700; color:#1e2d3d;">Session ending in</div>
+    <div id="idleCounter" style="font-size:52px; font-weight:700;
+         color:#2563eb; font-family:'Space Mono',monospace;">10</div>
+    <div style="font-size:13px; color:#8fa4b8; margin-top:4px;">seconds</div>
+    <button onclick="startIdleTimer()"
+            style="margin-top:16px; padding:10px 24px; background:#2563eb;
+                   color:#fff; border:none; border-radius:8px;
+                   font-size:14px; font-weight:600; cursor:pointer;">
+      I'm still here
+    </button>
+  </div>
+</div>
+</body>
+</html>

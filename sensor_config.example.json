@@ -1,0 +1,43 @@
+// Copy this file to sensor_config.json and adjust values for your hardware
+// This file contains calibration and configuration values for all sensors
+// Never commit sensor_config.json to version control (hardware-specific)
+
+{
+  // ── WEIGHT SCALE (HX711 Load Cell) ──────────────────────────────────
+  "weight": {
+    "data_pin": 5,                    // GPIO pin connected to HX711 DOUT
+    "clock_pin": 6,                   // GPIO pin connected to HX711 SCK
+    "scale_factor": 23000,            // Calibration factor (adjust after calibration)
+                                      // Higher = lighter readings, Lower = heavier readings
+                                      // Calibrate: place known weight, adjust until accurate
+    "tare_samples": 25,               // Number of readings to average when zeroing scale
+    "stability_threshold": 0.3        // Max kg variance to consider reading stable
+  },
+
+  // ── HEIGHT SENSOR (HC-SR04 Ultrasonic) ─────────────────────────────
+  "height": {
+    "trigger_pin": 23,                // GPIO pin connected to HC-SR04 TRIG
+    "echo_pin": 24,                   // GPIO pin connected to HC-SR04 ECHO
+    "sensor_mount_height_cm": 214.0,  // Distance from floor to sensor (measure carefully!)
+                                      // Patient height = mount_height - sensor_reading
+    "num_readings": 10,               // Number of readings to average per measurement
+    "countdown_seconds": 5            // Countdown before measurement starts
+  },
+
+  // ── TEMPERATURE SENSOR (MLX90614 Infrared) ──────────────────────────
+  "temperature": {
+    "serial_port": "/dev/serial0",    // Serial port for sensor communication
+                                      // Common values: /dev/serial0, /dev/ttyUSB0, /dev/ttyAMA0
+    "baud_rate": 9600,                // Serial communication speed (match sensor spec)
+    "read_timeout_seconds": 10        // Max seconds to wait for sensor response
+  },
+
+  // ── CAMERA (Raspberry Pi Camera Module) ─────────────────────────────
+  "camera": {
+    "resolution": [1240, 720],        // [width, height] in pixels
+                                      // Higher = better quality but slower capture
+                                      // Recommended: 1240x720 or 1920x1080
+    "capture_delay_seconds": 5        // Countdown before photo capture
+  }
+}
+
